@@ -1,213 +1,73 @@
 /**
- * FindLeads — app.js
+ * FindLeads — app.js (Tailwind & Dropdown Edition)
  * Zero-cost, browser-based lead generation using OpenStreetMap.
- * No API keys, no backend, no build tools.
  */
 
 // ============================================================
-//  Category Mapping Table (plain-English → OSM tag arrays)
-//  Each entry: { key: 'osm_key', value: 'osm_value' }
-//  Multiple entries = OR condition in Overpass query
+//  Category Mapping Table (Grouped for Select Dropdown)
 // ============================================================
 const CATEGORY_MAP = {
-  // --- Hair & Beauty ---
-  'barbershop':        [{ k:'shop',   v:'hairdresser' }, { k:'amenity', v:'barber' }],
-  'barbershops':       [{ k:'shop',   v:'hairdresser' }, { k:'amenity', v:'barber' }],
-  'barber':            [{ k:'shop',   v:'hairdresser' }, { k:'amenity', v:'barber' }],
-  'barbers':           [{ k:'shop',   v:'hairdresser' }, { k:'amenity', v:'barber' }],
-  'hair salon':        [{ k:'shop',   v:'hairdresser' }],
-  'hair salons':       [{ k:'shop',   v:'hairdresser' }],
-  'beauty salon':      [{ k:'shop',   v:'beauty' }],
-  'beauty salons':     [{ k:'shop',   v:'beauty' }],
-  'nail salon':        [{ k:'shop',   v:'nail_salon' }],
-  'nail salons':       [{ k:'shop',   v:'nail_salon' }],
-  'nails':             [{ k:'shop',   v:'nail_salon' }],
-  'tanning salon':     [{ k:'shop',   v:'tanning' }],
-  'tattoo':            [{ k:'shop',   v:'tattoo' }],
-  'tattoo parlor':     [{ k:'shop',   v:'tattoo' }],
-  'spa':               [{ k:'leisure',v:'spa' }],
-  'spas':              [{ k:'leisure',v:'spa' }],
-  'massage':           [{ k:'shop',   v:'massage' }],
-
-  // --- Fitness & Wellness ---
-  'gym':               [{ k:'leisure',v:'fitness_centre' }, { k:'amenity', v:'gym' }],
-  'gyms':              [{ k:'leisure',v:'fitness_centre' }, { k:'amenity', v:'gym' }],
-  'fitness center':    [{ k:'leisure',v:'fitness_centre' }],
-  'fitness':           [{ k:'leisure',v:'fitness_centre' }],
-  'yoga studio':       [{ k:'sport',  v:'yoga' }, { k:'leisure',v:'fitness_centre' }],
-  'yoga':              [{ k:'sport',  v:'yoga' }],
-  'yoga studios':      [{ k:'sport',  v:'yoga' }],
-  'pilates':           [{ k:'sport',  v:'pilates' }],
-  'crossfit':          [{ k:'sport',  v:'crossfit' }],
-  'martial arts':      [{ k:'sport',  v:'martial_arts' }],
-  'boxing gym':        [{ k:'sport',  v:'boxing' }],
-  'swimming pool':     [{ k:'leisure',v:'swimming_pool' }],
-
-  // --- Medical & Health ---
-  'dentist':           [{ k:'amenity',v:'dentist' }],
-  'dentists':          [{ k:'amenity',v:'dentist' }],
-  'dental':            [{ k:'amenity',v:'dentist' }],
-  'doctor':            [{ k:'amenity',v:'doctors' }],
-  'doctors':           [{ k:'amenity',v:'doctors' }],
-  'clinic':            [{ k:'amenity',v:'clinic' }],
-  'clinics':           [{ k:'amenity',v:'clinic' }],
-  'optometrist':       [{ k:'amenity',v:'optician' }, { k:'shop', v:'optician' }],
-  'optometrists':      [{ k:'amenity',v:'optician' }, { k:'shop', v:'optician' }],
-  'optician':          [{ k:'shop',   v:'optician' }],
-  'pharmacy':          [{ k:'amenity',v:'pharmacy' }],
-  'pharmacies':        [{ k:'amenity',v:'pharmacy' }],
-  'chiropractor':      [{ k:'amenity',v:'chiropractor' }],
-  'physical therapy':  [{ k:'amenity',v:'physiotherapist' }],
-  'physiotherapy':     [{ k:'amenity',v:'physiotherapist' }],
-  'veterinarian':      [{ k:'amenity',v:'veterinary' }],
-  'vet':               [{ k:'amenity',v:'veterinary' }],
-  'veterinary':        [{ k:'amenity',v:'veterinary' }],
-
-  // --- Food & Drink ---
-  'restaurant':        [{ k:'amenity',v:'restaurant' }],
-  'restaurants':       [{ k:'amenity',v:'restaurant' }],
-  'cafe':              [{ k:'amenity',v:'cafe' }],
-  'cafes':             [{ k:'amenity',v:'cafe' }],
-  'coffee shop':       [{ k:'amenity',v:'cafe' }],
-  'coffee':            [{ k:'amenity',v:'cafe' }],
-  'fast food':         [{ k:'amenity',v:'fast_food' }],
-  'takeaway':          [{ k:'amenity',v:'fast_food' }],
-  'bar':               [{ k:'amenity',v:'bar' }],
-  'bars':              [{ k:'amenity',v:'bar' }],
-  'pub':               [{ k:'amenity',v:'pub' }],
-  'pubs':              [{ k:'amenity',v:'pub' }],
-  'bakery':            [{ k:'shop',   v:'bakery' }],
-  'bakeries':          [{ k:'shop',   v:'bakery' }],
-  'pizza':             [{ k:'amenity',v:'restaurant' }, { k:'amenity',v:'fast_food' }],
-  'ice cream':         [{ k:'amenity',v:'ice_cream' }, { k:'shop', v:'ice_cream' }],
-
-  // --- Automotive ---
-  'auto repair':       [{ k:'shop',   v:'car_repair' }],
-  'car repair':        [{ k:'shop',   v:'car_repair' }],
-  'mechanic':          [{ k:'shop',   v:'car_repair' }],
-  'mechanics':         [{ k:'shop',   v:'car_repair' }],
-  'auto shop':         [{ k:'shop',   v:'car_repair' }],
-  'car wash':          [{ k:'amenity',v:'car_wash' }],
-  'car dealer':        [{ k:'shop',   v:'car' }],
-  'tire shop':         [{ k:'shop',   v:'tyres' }],
-  'tires':             [{ k:'shop',   v:'tyres' }],
-  'gas station':       [{ k:'amenity',v:'fuel' }],
-  'fuel':              [{ k:'amenity',v:'fuel' }],
-
-  // --- Pet Services ---
-  'pet groomer':       [{ k:'shop',   v:'pet_grooming' }],
-  'pet groomers':      [{ k:'shop',   v:'pet_grooming' }],
-  'grooming':          [{ k:'shop',   v:'pet_grooming' }],
-  'pet shop':          [{ k:'shop',   v:'pet' }],
-  'pet store':         [{ k:'shop',   v:'pet' }],
-
-  // --- Home Services ---
-  'plumber':           [{ k:'shop',   v:'plumber' }],
-  'plumbers':          [{ k:'shop',   v:'plumber' }],
-  'plumbing':          [{ k:'shop',   v:'plumber' }],
-  'electrician':       [{ k:'shop',   v:'electrician' }],
-  'electricians':      [{ k:'shop',   v:'electrician' }],
-  'locksmith':         [{ k:'shop',   v:'locksmith' }],
-  'locksmiths':        [{ k:'shop',   v:'locksmith' }],
-  'cleaning':          [{ k:'shop',   v:'cleaning' }],
-  'cleaning service':  [{ k:'shop',   v:'cleaning' }],
-  'laundromat':        [{ k:'shop',   v:'laundry' }],
-  'laundry':           [{ k:'shop',   v:'laundry' }],
-  'dry cleaner':       [{ k:'shop',   v:'dry_cleaning' }],
-  'hardware store':    [{ k:'shop',   v:'hardware' }],
-  'hardware':          [{ k:'shop',   v:'hardware' }],
-
-  // --- Retail ---
-  'clothing store':    [{ k:'shop',   v:'clothes' }],
-  'clothing':          [{ k:'shop',   v:'clothes' }],
-  'boutique':          [{ k:'shop',   v:'clothes' }],
-  'bookstore':         [{ k:'shop',   v:'books' }],
-  'book store':        [{ k:'shop',   v:'books' }],
-  'flower shop':       [{ k:'shop',   v:'florist' }],
-  'florist':           [{ k:'shop',   v:'florist' }],
-  'florists':          [{ k:'shop',   v:'florist' }],
-  'jewelry':           [{ k:'shop',   v:'jewelry' }],
-  'jeweler':           [{ k:'shop',   v:'jewelry' }],
-  'electronics':       [{ k:'shop',   v:'electronics' }],
-  'furniture':         [{ k:'shop',   v:'furniture' }],
-  'antique':           [{ k:'shop',   v:'antiques' }],
-  'gift shop':         [{ k:'shop',   v:'gift' }],
-  'toy store':         [{ k:'shop',   v:'toys' }],
-
-  // --- Professional Services ---
-  'real estate':       [{ k:'office', v:'estate_agent' }],
-  'accountant':        [{ k:'office', v:'accountant' }],
-  'accountants':       [{ k:'office', v:'accountant' }],
-  'lawyer':            [{ k:'office', v:'lawyer' }],
-  'lawyers':           [{ k:'office', v:'lawyer' }],
-  'attorney':          [{ k:'office', v:'lawyer' }],
-  'financial advisor': [{ k:'office', v:'financial' }],
-  'insurance':         [{ k:'office', v:'insurance' }],
-  'travel agency':     [{ k:'shop',   v:'travel_agency' }],
-  'hotel':             [{ k:'tourism',v:'hotel' }],
-  'hotels':            [{ k:'tourism',v:'hotel' }],
-  'motel':             [{ k:'tourism',v:'motel' }],
-
-  // --- Education ---
-  'school':            [{ k:'amenity',v:'school' }],
-  'daycare':           [{ k:'amenity',v:'childcare' }],
-  'tutoring':          [{ k:'amenity',v:'tutoring_centre' }],
-
-  // --- Entertainment ---
-  'cinema':            [{ k:'amenity',v:'cinema' }],
-  'movie theater':     [{ k:'amenity',v:'cinema' }],
-  'photography':       [{ k:'shop',   v:'photo' }],
-  'photographer':      [{ k:'shop',   v:'photo' }],
-  'music school':      [{ k:'amenity',v:'music_school' }],
-  'art gallery':       [{ k:'tourism',v:'gallery' }],
-  'museum':            [{ k:'tourism',v:'museum' }],
+  'All Businesses (Broad Search)': [
+    { k:'shop', v:'*' }, { k:'amenity', v:'*' }, { k:'leisure', v:'*' }
+  ],
+  'Barbers & Hair Salons': [
+    { k:'shop', v:'hairdresser' }, { k:'amenity', v:'barber' }
+  ],
+  'Nail & Beauty Salons': [
+    { k:'shop', v:'beauty' }, { k:'shop', v:'nail_salon' }, { k:'shop', v:'tanning' }, { k:'leisure', v:'spa' }
+  ],
+  'Gyms & Fitness Centers': [
+    { k:'leisure', v:'fitness_centre' }, { k:'amenity', v:'gym' }, { k:'sport', v:'yoga' }, { k:'sport', v:'crossfit' }, { k:'sport', v:'pilates' }
+  ],
+  'Restaurants & Cafes': [
+    { k:'amenity', v:'restaurant' }, { k:'amenity', v:'cafe' }, { k:'amenity', v:'fast_food' }, { k:'shop', v:'bakery' }
+  ],
+  'Bars & Pubs': [
+    { k:'amenity', v:'bar' }, { k:'amenity', v:'pub' }
+  ],
+  'Dentists & Orthodontists': [
+    { k:'amenity', v:'dentist' }
+  ],
+  'Doctors & Clinics': [
+    { k:'amenity', v:'doctors' }, { k:'amenity', v:'clinic' }
+  ],
+  'Auto Repair & Mechanics': [
+    { k:'shop', v:'car_repair' }
+  ],
+  'Car Washes & Detailers': [
+    { k:'amenity', v:'car_wash' }
+  ],
+  'Pet Groomers & Stores': [
+    { k:'shop', v:'pet_grooming' }, { k:'shop', v:'pet' }
+  ],
+  'Plumbers & Electricians': [
+    { k:'shop', v:'plumber' }, { k:'shop', v:'electrician' }
+  ],
+  'Real Estate Agencies': [
+    { k:'office', v:'estate_agent' }
+  ],
+  'Accountants & Lawyers': [
+    { k:'office', v:'accountant' }, { k:'office', v:'lawyer' }
+  ],
+  'Hotels & Motels': [
+    { k:'tourism', v:'hotel' }, { k:'tourism', v:'motel' }
+  ],
 };
 
-// Unique list for autocomplete display
-const CATEGORY_LIST = [...new Set(Object.keys(CATEGORY_MAP))].sort();
-
-// Popular category pills
-const POPULAR_CATEGORIES = [
-  { emoji: '✂️', label: 'Barbershops' },
-  { emoji: '💪', label: 'Gyms' },
-  { emoji: '🦷', label: 'Dentists' },
-  { emoji: '🍕', label: 'Restaurants' },
-  { emoji: '🔧', label: 'Auto Repair' },
-  { emoji: '🧘', label: 'Yoga Studios' },
-  { emoji: '🐾', label: 'Pet Groomers' },
-  { emoji: '☕', label: 'Coffee Shops' },
-  { emoji: '💅', label: 'Nail Salons' },
-  { emoji: '🔩', label: 'Plumbers' },
-];
-
-// Pre-built starter searches
-const STARTER_SEARCHES = [
-  { emoji: '✂️', category: 'Barbershops',  city: 'Austin, TX' },
-  { emoji: '🦷', category: 'Dentists',     city: 'Brooklyn, NY' },
-  { emoji: '💅', category: 'Nail Salons',  city: 'Los Angeles, CA' },
-  { emoji: '🔧', category: 'Auto Repair',  city: 'Chicago, IL' },
-  { emoji: '🐾', category: 'Pet Groomers', city: 'Miami, FL' },
-  { emoji: '☕', category: 'Coffee Shops', city: 'Seattle, WA' },
-];
-
-// Pro tips (rotated)
 const PRO_TIPS = [
   'Targeting smaller towns means fewer competitors pitching the same business.',
   'Restaurants, salons, and auto shops are the easiest cold pitches — they benefit obviously from an online presence.',
   'If a business has 20+ reviews but no website, they have customers to lose — that\'s your pitch.',
-  'A personal cold email referencing the business by name converts 3× better than a generic template.',
-  'Start your pitch with: "I found your listing on Google Maps — here\'s what a simple site could do for you."',
-  'Businesses with a phone number in the data are easier to call; those without rely on walk-in traffic.',
 ];
 
 // ============================================================
 //  State
 // ============================================================
-let allResults       = [];   // full unfiltered results from last search
-let displayedCount   = 0;    // how many cards are shown (pagination)
-let lastSearchQuery  = null; // { category, city }
+let allResults       = [];   // full unfiltered results
+let displayedCount   = 0;    // pagination
+let lastSearchQuery  = null;
 let isLoading        = false;
-let pendingLead      = null; // lead awaiting list assignment in modal
+let pendingLead      = null;
 const PAGE_SIZE      = 20;
 
 // ============================================================
@@ -229,11 +89,8 @@ function formatPhone(phone) {
 
 function formatAddress(tags) {
   const parts = [];
-  if (tags['addr:housenumber'] && tags['addr:street']) {
-    parts.push(`${tags['addr:housenumber']} ${tags['addr:street']}`);
-  } else if (tags['addr:street']) {
-    parts.push(tags['addr:street']);
-  }
+  if (tags['addr:housenumber'] && tags['addr:street']) parts.push(`${tags['addr:housenumber']} ${tags['addr:street']}`);
+  else if (tags['addr:street']) parts.push(tags['addr:street']);
   if (tags['addr:city']) parts.push(tags['addr:city']);
   if (tags['addr:state']) parts.push(tags['addr:state']);
   if (tags['addr:postcode']) parts.push(tags['addr:postcode']);
@@ -250,239 +107,152 @@ function timeAgo(ts) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// ============================================================
-//  Website detection
-// ============================================================
 function hasWebsite(tags) {
   const keys = ['website','contact:website','url','contact:url'];
   return keys.some(k => tags[k] && tags[k].trim().length > 0);
 }
 
-// ============================================================
-//  Google Maps deeplink
-// ============================================================
 function buildMapsUrl(name, address) {
   const query = [name, address].filter(Boolean).join(' ');
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
 // ============================================================
-//  Nominatim geocoding
+//  Nominatim Autocomplete & Geocoding
 // ============================================================
+let debounceTimer;
+async function fetchLocationSuggestions(query) {
+  if (!query) return [];
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&featuretype=settlement`;
+  const resp = await fetch(url, { headers: { 'User-Agent': 'FindLeads/1.0' } });
+  if (!resp.ok) return [];
+  return await resp.json();
+}
+
 async function geocodeLocation(cityName) {
-  const url = `https://nominatim.openstreetmap.org/search?` +
-    new URLSearchParams({
-      q: cityName,
-      format: 'json',
-      limit: '1',
-      addressdetails: '1',
-    });
-
-  const resp = await fetch(url, {
-    headers: { 'User-Agent': 'FindLeads/1.0 (github.com/FindLeads)' }
-  });
-
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityName)}&format=json&limit=1`;
+  const resp = await fetch(url, { headers: { 'User-Agent': 'FindLeads/1.0' } });
   if (!resp.ok) throw new Error(`Nominatim error: ${resp.status}`);
   const data = await resp.json();
   if (!data.length) throw new Error(`Location not found: "${cityName}"`);
-
-  const { boundingbox, display_name } = data[0];
-  // boundingbox = [south, north, west, east]
-  return {
-    south: parseFloat(boundingbox[0]),
-    north: parseFloat(boundingbox[1]),
-    west:  parseFloat(boundingbox[2]),
-    east:  parseFloat(boundingbox[3]),
-    displayName: display_name,
-  };
+  const b = data[0].boundingbox;
+  return { south: b[0], north: b[1], west: b[2], east: b[3], displayName: data[0].display_name };
 }
 
 // ============================================================
-//  Overpass query builder
+//  Overpass query builder & Fetch
 // ============================================================
 function buildOverpassQuery(osmTags, bbox) {
   const { south, west, north, east } = bbox;
   const bboxStr = `${south},${west},${north},${east}`;
+  
+  // Handling wildcard "*" values for "All Businesses"
+  const getQuery = (type, k, v) => v === '*' 
+    ? `  ${type}["${k}"](${bboxStr});` 
+    : `  ${type}["${k}"="${v}"](${bboxStr});`;
 
-  const nodeLines = osmTags
-    .map(t => `  node["${t.k}"="${t.v}"](${bboxStr});`)
-    .join('\n');
-  const wayLines = osmTags
-    .map(t => `  way["${t.k}"="${t.v}"](${bboxStr});`)
-    .join('\n');
-  const relLines = osmTags
-    .map(t => `  relation["${t.k}"="${t.v}"](${bboxStr});`)
-    .join('\n');
+  const nodeLines = osmTags.map(t => getQuery('node', t.k, t.v)).join('\n');
+  const wayLines  = osmTags.map(t => getQuery('way', t.k, t.v)).join('\n');
+  const relLines  = osmTags.map(t => getQuery('relation', t.k, t.v)).join('\n');
 
-  return `[out:json][timeout:30];
-(
-${nodeLines}
-${wayLines}
-${relLines}
-);
-out body;
->;
-out skel qt;`;
+  return `[out:json][timeout:45];\n(\n${nodeLines}\n${wayLines}\n${relLines}\n);\nout body;\n>;\nout skel qt;`;
 }
 
-// ============================================================
-//  Fetch from Overpass
-// ============================================================
 async function fetchFromOverpass(query) {
   const resp = await fetch('https://overpass-api.de/api/interpreter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `data=${encodeURIComponent(query)}`,
   });
-
-  if (resp.status === 429 || resp.status === 504) {
-    throw new Error('overpass_busy');
-  }
+  if (resp.status === 429 || resp.status === 504) throw new Error('overpass_busy');
   if (!resp.ok) throw new Error(`Overpass error: ${resp.status}`);
-
   const data = await resp.json();
   return data.elements || [];
 }
 
 // ============================================================
-//  Parse OSM elements into lead objects
+//  Parse OSM elements
 // ============================================================
 function parseElements(elements, categoryLabel) {
   const seen = new Set();
   const leads = [];
-
   for (const el of elements) {
     if (!el.tags || !el.tags.name) continue;
-
     const name = el.tags.name.trim();
     const addr = formatAddress(el.tags);
     const key  = `${name}|${addr || el.id}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
-    const phone = formatPhone(
-      el.tags.phone ||
-      el.tags['contact:phone'] ||
-      el.tags['phone:mobile'] ||
-      null
-    );
-
     leads.push({
-      id:          el.id,
+      id: el.id,
       name,
-      address:     addr,
-      phone,
-      website:     el.tags.website || el.tags['contact:website'] || null,
-      hasWebsite:  hasWebsite(el.tags),
-      category:    categoryLabel,
-      mapsUrl:     buildMapsUrl(name, addr),
-      tags:        el.tags,
-      lat:         el.lat || (el.center && el.center.lat),
-      lon:         el.lon || (el.center && el.center.lon),
-      dateSaved:   null,
+      address: addr,
+      phone: formatPhone(el.tags.phone || el.tags['contact:phone'] || el.tags['phone:mobile']),
+      website: el.tags.website || el.tags['contact:website'] || null,
+      hasWebsite: hasWebsite(el.tags),
+      category: categoryLabel,
+      mapsUrl: buildMapsUrl(name, addr),
+      tags: el.tags,
+      dateSaved: null,
     });
   }
-
   return leads;
 }
 
 // ============================================================
-//  Filter & Sort
+//  Filter & Rendering
 // ============================================================
 function applyFilters(leads, { leadsOnly, sort }) {
   let filtered = leadsOnly ? leads.filter(l => !l.hasWebsite) : [...leads];
-
-  switch (sort) {
-    case 'leads-first':
-      filtered.sort((a, b) => a.hasWebsite - b.hasWebsite);
-      break;
-    case 'name-az':
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    default:
-      filtered.sort((a, b) => a.hasWebsite - b.hasWebsite);
-  }
-
+  if (sort === 'leads') filtered.sort((a, b) => a.hasWebsite - b.hasWebsite);
+  else filtered.sort((a, b) => a.name.localeCompare(b.name));
   return filtered;
 }
 
-// ============================================================
-//  Rendering
-// ============================================================
 function renderSkeleton(count = 6) {
   const grid = $('#results-grid');
-  grid.innerHTML = Array(count).fill(0).map(() => `
-    <div class="skeleton-card" aria-hidden="true">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div class="skeleton-line title"></div>
-        <div class="skeleton-line badge"></div>
-      </div>
-      <div class="skeleton-line long"></div>
-      <div class="skeleton-line medium"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-actions">
-        <div class="skeleton-btn"></div>
-        <div class="skeleton-btn"></div>
-      </div>
-    </div>
-  `).join('');
+  grid.innerHTML = '';
+  const tpl = $('#tpl-skeleton-card');
+  for (let i = 0; i < count; i++) {
+    grid.appendChild(tpl.content.cloneNode(true));
+  }
 }
 
 function renderCard(lead) {
-  const badgeHtml = lead.hasWebsite
-    ? `<span class="badge badge-has-website">🌐 Has Website</span>`
-    : `<span class="badge badge-lead"><span class="badge-dot"></span>No Website — Lead!</span>`;
+  const tpl = $('#tpl-business-card').content.cloneNode(true);
+  const card = $('.business-card', tpl);
+  
+  card.dataset.id = lead.id;
+  $('.name', card).textContent = lead.name;
+  
+  const badge = $('.badge', card);
+  if (lead.hasWebsite) {
+    badge.classList.add('bg-slate-800', 'text-slate-300', 'border', 'border-slate-700');
+    badge.innerHTML = `🌐 Has Website`;
+  } else {
+    badge.classList.add('bg-amber-500/20', 'text-amber-400', 'border', 'border-amber-500/30');
+    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse-dot"></span> No Website — Lead!`;
+  }
 
-  const addressHtml = lead.address
-    ? `<div class="detail-row">
-         <span class="detail-icon">📍</span>
-         <span class="detail-value">${esc(lead.address)}</span>
-       </div>`
-    : '';
+  if (lead.address) {
+    $('.address', card).textContent = lead.address;
+  } else {
+    $('.address', card).parentElement.classList.add('hidden');
+  }
 
-  const phoneHtml = lead.phone
-    ? `<div class="phone-row">
-         <span class="detail-icon">📞</span>
-         <span class="detail-value">${esc(lead.phone)}</span>
-         <button class="btn-copy" data-phone="${esc(lead.phone)}" aria-label="Copy phone number">Copy</button>
-       </div>`
-    : '';
+  if (lead.phone) {
+    $('.phone', card).textContent = lead.phone;
+    $('.btn-copy', card).dataset.phone = lead.phone;
+  } else {
+    $('.phone-container', card).classList.add('hidden');
+  }
 
-  const websiteHtml = lead.hasWebsite && lead.website
-    ? `<div class="detail-row">
-         <span class="detail-icon">🔗</span>
-         <a href="${esc(lead.website)}" target="_blank" rel="noopener" class="detail-value" style="color:var(--web-color);font-size:var(--fs-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(lead.website)}</a>
-       </div>`
-    : '';
+  $('.link-maps', card).href = lead.mapsUrl;
+  $('.btn-save', card).dataset.leadId = lead.id;
+  $('.btn-save', card).id = `save-${lead.id}`;
 
-  return `
-    <article class="biz-card ${lead.hasWebsite ? '' : 'is-lead'}" data-id="${lead.id}" aria-label="${esc(lead.name)}">
-      <div class="card-header">
-        <h3 class="biz-name">${esc(lead.name)}</h3>
-        ${badgeHtml}
-      </div>
-      <span class="category-chip">${esc(lead.category)}</span>
-      <div class="card-details">
-        ${addressHtml}
-        ${phoneHtml}
-        ${websiteHtml}
-      </div>
-      <div class="card-actions">
-        <a href="${lead.mapsUrl}" target="_blank" rel="noopener"
-           class="btn-action btn-maps"
-           id="maps-${lead.id}"
-           aria-label="Open ${esc(lead.name)} in Google Maps">
-          🗺️ Open in Maps
-        </a>
-        <button class="btn-action btn-save"
-                data-lead-id="${lead.id}"
-                id="save-${lead.id}"
-                aria-label="Save ${esc(lead.name)} as lead">
-          ⭐ Save Lead
-        </button>
-      </div>
-    </article>
-  `;
+  return card;
 }
 
 function renderResults(filtered, append = false) {
@@ -491,704 +261,376 @@ function renderResults(filtered, append = false) {
 
   const slice = filtered.slice(displayedCount, displayedCount + PAGE_SIZE);
   if (slice.length === 0 && !append) {
-    grid.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-title">No leads found</div>
-        <div class="empty-sub">Try a different category or location, or turn off the "No Website Only" filter.</div>
-      </div>`;
-    $('#load-more-wrap').classList.add('hidden');
+    grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">No leads found. Try a different search.</div>`;
+    $('#btn-load-more').parentElement.classList.add('hidden');
     return;
   }
 
-  grid.insertAdjacentHTML('beforeend', slice.map(renderCard).join(''));
+  slice.forEach(lead => grid.appendChild(renderCard(lead)));
   displayedCount += slice.length;
 
   const remaining = filtered.length - displayedCount;
-  const lmw = $('#load-more-wrap');
   if (remaining > 0) {
-    lmw.classList.remove('hidden');
-    $('#load-more-btn').textContent = `Load ${Math.min(remaining, PAGE_SIZE)} More`;
+    $('#btn-load-more').parentElement.classList.remove('hidden');
+    $('#btn-load-more').classList.remove('hidden');
+    $('#btn-load-more').textContent = `Load ${Math.min(remaining, PAGE_SIZE)} More`;
   } else {
-    lmw.classList.add('hidden');
+    $('#btn-load-more').parentElement.classList.add('hidden');
   }
 }
 
 function updateToolbar(filtered) {
-  const total  = allResults.length;
-  const leads  = allResults.filter(l => !l.hasWebsite).length;
-  const shown  = filtered.length;
-  const lOnly  = $('#filter-leads-only').checked;
-
+  const total = allResults.length;
+  const leads = allResults.filter(l => !l.hasWebsite).length;
+  const shown = filtered.length;
+  const lOnly = $('#toggle-no-website').checked;
   const countEl = $('#results-count');
+  
   if (total > 0) {
     countEl.innerHTML = lOnly
-      ? `Showing <strong>${shown}</strong> leads (out of <strong>${total}</strong> businesses found)`
-      : `<strong>${shown}</strong> businesses found — <span class="lead-count">${leads} have no website</span>`;
+      ? `Showing <span class="text-white">${shown}</span> leads out of <span class="text-white">${total}</span> businesses`
+      : `<span class="text-white">${shown}</span> businesses found — <span class="text-amber-400 font-bold">${leads} leads</span>`;
   }
 }
 
 // ============================================================
-//  Loading stage UI
+//  Search Orchestration
 // ============================================================
-function setLoadingStage(stage, sub = '') {
-  const stageEl = $('#loading-stage');
-  const subEl   = $('#loading-sub');
-  if (stageEl) stageEl.textContent = stage;
-  if (subEl)   subEl.textContent   = sub;
+function setLoading(active, message = '') {
+  isLoading = active;
+  $('#btn-search').disabled = active;
+  if (active) {
+    $('#results-section').classList.add('hidden');
+    $('#status-container').classList.remove('hidden');
+    $('#status-container').classList.add('flex');
+    $('#status-message').textContent = message;
+    $('#error-banner').classList.add('hidden');
+  } else {
+    $('#status-container').classList.add('hidden');
+    $('#status-container').classList.remove('flex');
+    $('#results-section').classList.remove('hidden');
+  }
 }
 
-function showLoading() {
-  $('#results-section').classList.remove('hidden');
-  $('#loading-status').classList.remove('hidden');
-  $('#results-toolbar').classList.add('hidden');
-  $('#results-grid').innerHTML = '';
-  $('#load-more-wrap').classList.add('hidden');
-  renderSkeleton(6);
+function showError(msg, isOverpassBusy = false) {
+  $('#results-section').classList.add('hidden');
+  $('#status-container').classList.add('hidden');
+  $('#error-banner').classList.remove('hidden');
+  
+  if (isOverpassBusy) {
+    $('#error-message').textContent = "The OpenStreetMap server is currently under heavy load and timed out. Please try a more specific area or wait a moment.";
+  } else {
+    $('#error-message').textContent = msg;
+  }
 }
 
-function hideLoading() {
-  $('#loading-status').classList.add('hidden');
-  $('#results-toolbar').classList.remove('hidden');
-}
-
-// ============================================================
-//  Main search orchestration
-// ============================================================
 async function runSearch(category, city) {
   if (isLoading) return;
-  isLoading = true;
   lastSearchQuery = { category, city };
   allResults = [];
   displayedCount = 0;
 
-  const searchBtn = $('#search-btn');
-  searchBtn.disabled = true;
-
-  showLoading();
-  setLoadingStage('🌐 Locating city boundaries...', `Finding "${city}" on the map`);
-
+  setLoading(true, `Finding boundaries for ${city}...`);
   try {
-    // Step 1: Geocode
     const bbox = await geocodeLocation(city);
-
-    // Step 2: Resolve OSM tags
-    const normalised = category.toLowerCase().trim();
-    const osmTags = CATEGORY_MAP[normalised];
-    if (!osmTags) {
-      throw new Error(`Category not recognised: "${category}". Try something like "barbershops" or "dentists".`);
-    }
-
-    setLoadingStage('🗺️ Querying OpenStreetMap...', `Searching for ${category} in ${bbox.displayName.split(',')[0]}`);
-
-    // Step 3: Build + fire Overpass query
-    const query    = buildOverpassQuery(osmTags, bbox);
+    const osmTags = CATEGORY_MAP[category];
+    
+    setLoading(true, `Querying OpenStreetMap for ${category}... (this may take a few seconds)`);
+    const query = buildOverpassQuery(osmTags, bbox);
     const elements = await fetchFromOverpass(query);
 
-    setLoadingStage('✨ Analysing results...', `Processing ${elements.length} records`);
-
-    // Small artificial delay so the animation feels polished
-    await new Promise(r => setTimeout(r, 600));
-
-    // Step 4: Parse
+    setLoading(true, `Analyzing ${elements.length} records...`);
     allResults = parseElements(elements, category);
-
-    // Step 5: Add to history
     addToHistory({ category, city, total: allResults.length, leads: allResults.filter(l => !l.hasWebsite).length });
 
-    // Step 6: Render
-    hideLoading();
-
-    const filters = getCurrentFilters();
+    setLoading(false);
+    
+    const filters = { leadsOnly: $('#toggle-no-website').checked, sort: $('#sort-select').value };
     const filtered = applyFilters(allResults, filters);
-    displayedCount = 0;
     renderResults(filtered);
     updateToolbar(filtered);
 
-    if (allResults.length === 0) {
-      showToast('info', 'ℹ️ No businesses found. Try a broader location or different category.');
-    }
-
   } catch (err) {
-    hideLoading();
-    $('#results-grid').innerHTML = '';
-    if (err.message === 'overpass_busy') {
-      $('#results-grid').innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-icon">⏳</div>
-          <div class="empty-title">Overpass API is busy</div>
-          <div class="empty-sub">The OpenStreetMap server is under load. Please wait a moment and try again.</div>
-          <button class="btn-retry" id="retry-btn" style="margin:20px auto 0;">↺ Retry Search</button>
-        </div>`;
-      $('#retry-btn')?.addEventListener('click', () => runSearch(category, city));
-    } else {
-      $('#results-grid').innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-icon">⚠️</div>
-          <div class="empty-title">Something went wrong</div>
-          <div class="empty-sub">${esc(err.message)}</div>
-        </div>`;
-      showToast('error', `Error: ${err.message}`);
-    }
-  } finally {
-    isLoading = false;
-    searchBtn.disabled = false;
+    setLoading(false);
+    showError(err.message, err.message === 'overpass_busy');
   }
-}
-
-function getCurrentFilters() {
-  return {
-    leadsOnly: $('#filter-leads-only').checked,
-    sort:      $('#sort-select').value,
-  };
 }
 
 function refilter() {
   if (!allResults.length) return;
-  const filters  = getCurrentFilters();
+  const filters = { leadsOnly: $('#toggle-no-website').checked, sort: $('#sort-select').value };
   const filtered = applyFilters(allResults, filters);
   displayedCount = 0;
-  $('#results-grid').innerHTML = '';
   renderResults(filtered);
   updateToolbar(filtered);
 }
 
 // ============================================================
-//  localStorage — Search History
+//  History & Saved Lists
 // ============================================================
 const HISTORY_KEY = 'findleads_history';
+const LISTS_KEY = 'findleads_saved_lists';
 
-function getHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
-  catch { return []; }
-}
+function getHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+function getSavedLists() { try { return JSON.parse(localStorage.getItem(LISTS_KEY) || '{}'); } catch { return {}; } }
 
 function addToHistory(entry) {
-  let hist = getHistory();
-  // Remove duplicate
-  hist = hist.filter(h => !(h.category === entry.category && h.city === entry.city));
+  let hist = getHistory().filter(h => !(h.category === entry.category && h.city === entry.city));
   hist.unshift({ ...entry, ts: Date.now() });
-  if (hist.length > 10) hist = hist.slice(0, 10);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-  renderHistoryPanel();
-}
-
-function deleteHistoryItem(idx) {
-  const hist = getHistory();
-  hist.splice(idx, 1);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-  renderHistoryPanel();
-}
-
-function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, 15)));
   renderHistoryPanel();
 }
 
 function renderHistoryPanel() {
-  const body = $('#history-panel-body');
-  if (!body) return;
+  const content = $('#panel-content');
   const hist = getHistory();
-
   if (!hist.length) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px">🕐</div><div class="empty-sub">No recent searches yet.</div></div>`;
+    content.innerHTML = `<div class="text-center mt-10 text-slate-500">No recent searches.</div>`;
     return;
   }
-
-  body.innerHTML = hist.map((h, i) => `
-    <div class="history-item" data-idx="${i}">
-      <span class="history-icon">🔍</span>
-      <div class="history-info">
-        <div class="history-query">${esc(h.category)} in ${esc(h.city)}</div>
-        <div class="history-meta">${timeAgo(h.ts)} · ${h.total ?? '?'} found · ${h.leads ?? '?'} leads</div>
+  content.innerHTML = hist.map((h, i) => `
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-slate-500 transition-colors history-item" data-idx="${i}">
+      <div class="font-medium text-slate-200">${h.category}</div>
+      <div class="text-sm text-slate-400 mb-2">${h.city}</div>
+      <div class="text-xs text-slate-500 flex justify-between">
+        <span>${h.leads} leads found</span>
+        <span>${timeAgo(h.ts)}</span>
       </div>
-      <button class="history-delete" data-del-idx="${i}" aria-label="Delete history item">✕</button>
     </div>
-  `).join('') + `<button class="panel-clear-btn" id="clear-history-btn">Clear All History</button>`;
-
-  // Wire clicks
-  $$('.history-item').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('.history-delete')) return;
-      const idx = parseInt(el.dataset.idx);
-      const h   = getHistory()[idx];
-      if (h) {
-        closeAllPanels();
-        $('#category-input').value = h.category;
-        $('#city-input').value     = h.city;
-        runSearch(h.category, h.city);
-      }
-    });
-  });
-
-  $$('.history-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteHistoryItem(parseInt(btn.dataset.delIdx));
-    });
-  });
-
-  $('#clear-history-btn')?.addEventListener('click', clearHistory);
-}
-
-// ============================================================
-//  localStorage — Saved Lists
-// ============================================================
-const LISTS_KEY = 'findleads_saved_lists';
-
-function getSavedLists() {
-  try { return JSON.parse(localStorage.getItem(LISTS_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-function saveLeadToList(lead, listName) {
-  const lists = getSavedLists();
-  if (!lists[listName]) lists[listName] = [];
-  // Avoid duplicates
-  if (!lists[listName].find(l => l.id === lead.id)) {
-    lists[listName].push({ ...lead, dateSaved: new Date().toISOString() });
-    localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
-    renderSavedListsPanel();
-    return true;
-  }
-  return false;
-}
-
-function deleteList(listName) {
-  const lists = getSavedLists();
-  delete lists[listName];
-  localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
-  renderSavedListsPanel();
+  `).join('');
 }
 
 function renderSavedListsPanel() {
-  const body = $('#saved-panel-body');
-  if (!body) return;
+  const content = $('#panel-content');
   const lists = getSavedLists();
   const names = Object.keys(lists);
-
   if (!names.length) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px">⭐</div><div class="empty-sub">No saved leads yet. Click "Save Lead" on any result card.</div></div>`;
+    content.innerHTML = `<div class="text-center mt-10 text-slate-500">No saved lists yet.</div>`;
     return;
   }
-
-  body.innerHTML = names.map(name => {
-    const leads = lists[name];
-    return `
-      <div class="saved-list-group">
-        <div class="saved-list-header">
-          <div class="saved-list-name">📋 ${esc(name)} <span class="saved-list-count">(${leads.length})</span></div>
-          <div class="saved-list-actions">
-            <button class="btn-export" data-list="${esc(name)}" aria-label="Export ${esc(name)} as CSV">⬇ CSV</button>
-            <button class="btn-delete-list" data-list="${esc(name)}" aria-label="Delete list ${esc(name)}">🗑</button>
-          </div>
-        </div>
-        <div class="saved-list-leads">
-          ${leads.slice(0, 5).map(l => `
-            <div class="saved-lead-item">
-              <div class="saved-lead-name">${esc(l.name)}</div>
-              <div class="saved-lead-address">${l.address ? esc(l.address) : 'No address'}</div>
-            </div>
-          `).join('')}
-          ${leads.length > 5 ? `<div class="saved-lead-item" style="color:var(--text-muted);font-size:var(--fs-xs)">+ ${leads.length - 5} more</div>` : ''}
+  content.innerHTML = names.map(name => `
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4">
+      <div class="flex justify-between items-center mb-3">
+        <h4 class="font-medium text-slate-200">${name}</h4>
+        <div class="flex gap-2">
+          <button class="text-xs text-emerald-400 hover:text-emerald-300 px-2 py-1 bg-emerald-400/10 rounded" onclick="exportListAsCsv('${esc(name)}')">CSV</button>
+          <button class="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-400/10 rounded" onclick="if(confirm('Delete list?')) { const l=JSON.parse(localStorage.getItem('${LISTS_KEY}')); delete l['${name}']; localStorage.setItem('${LISTS_KEY}', JSON.stringify(l)); document.getElementById('btn-saved').click(); }">Del</button>
         </div>
       </div>
-    `;
-  }).join('');
-
-  $$('.btn-export').forEach(btn => {
-    btn.addEventListener('click', () => exportListAsCsv(btn.dataset.list));
-  });
-
-  $$('.btn-delete-list').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (confirm(`Delete list "${btn.dataset.list}"?`)) deleteList(btn.dataset.list);
-    });
-  });
+      <div class="text-xs text-slate-400">${lists[name].length} saved leads</div>
+    </div>
+  `).join('');
 }
 
-// ============================================================
-//  CSV Export
-// ============================================================
-function exportListAsCsv(listName) {
+window.exportListAsCsv = function(listName) {
   const lists = getSavedLists();
   const leads = lists[listName];
   if (!leads || !leads.length) return;
-
-  const headers = ['Business Name','Phone','Address','Google Maps URL','Has Website','Date Saved'];
-  const rows = leads.map(l => [
-    l.name,
-    l.phone || '',
-    l.address || '',
-    l.mapsUrl || '',
-    l.hasWebsite ? 'Yes' : 'No',
-    l.dateSaved ? new Date(l.dateSaved).toLocaleDateString() : '',
-  ]);
-
-  const csvContent = [headers, ...rows]
-    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-
-  const blob   = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url    = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href  = url;
-  anchor.download = `${listName.replace(/[^a-z0-9]/gi,'_')}_leads.csv`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
+  const headers = ['Business Name','Phone','Address','Google Maps URL','Has Website'];
+  const rows = leads.map(l => [l.name, l.phone||'', l.address||'', l.mapsUrl||'', l.hasWebsite?'Yes':'No']);
+  const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${listName}_leads.csv`;
+  a.click();
   URL.revokeObjectURL(url);
-
-  showToast('success', `✅ Exported "${listName}" as CSV`);
-}
+};
 
 // ============================================================
-//  Save Lead Modal
+//  Modals & Panels
 // ============================================================
-function openSaveModal(lead) {
-  pendingLead = lead;
-  const modal   = $('#save-modal');
-  const overlay = $('#save-modal-overlay');
-  const bizName = $('#save-modal-biz-name');
-  const bizAddr = $('#save-modal-biz-address');
-
-  bizName.textContent = lead.name;
-  bizAddr.textContent = lead.address || 'No address on record';
-
-  renderSaveModalLists();
-
-  overlay.classList.add('active');
-  modal.setAttribute('aria-hidden','false');
-}
-
-function closeSaveModal() {
-  $('#save-modal-overlay').classList.remove('active');
-  $('#save-modal').setAttribute('aria-hidden','true');
-  pendingLead = null;
-}
-
-function renderSaveModalLists() {
-  const container = $('#existing-lists-container');
-  const lists     = getSavedLists();
-  const names     = Object.keys(lists);
-
-  if (!names.length) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:8px">No existing lists. Create one below.</p>`;
-    return;
-  }
-
-  container.innerHTML = `<div class="existing-lists-label">Add to existing list</div>` +
-    names.map(name => `
-      <div class="existing-list-option" data-list="${esc(name)}" tabindex="0" role="button"
-           aria-label="Add to list ${esc(name)}">
-        📋 ${esc(name)} <span style="color:var(--text-muted);margin-left:auto;font-size:var(--fs-xs)">${lists[name].length} leads</span>
-      </div>
-    `).join('');
-
-  $$('.existing-list-option', container).forEach(el => {
-    const handleSave = () => {
-      if (!pendingLead) return;
-      const added = saveLeadToList(pendingLead, el.dataset.list);
-      closeSaveModal();
-      if (added) {
-        showToast('success', `✅ Saved to "${el.dataset.list}"`);
-        markCardSaved(pendingLead.id);
-      } else {
-        showToast('info', 'Already in that list');
-      }
-    };
-    el.addEventListener('click', handleSave);
-    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleSave(); });
-  });
-}
-
-function markCardSaved(leadId) {
-  const btn = $(`#save-${leadId}`);
-  if (btn) {
-    btn.classList.add('saved');
-    btn.textContent = '✅ Saved';
-  }
-}
-
-// ============================================================
-//  Toast notifications
-// ============================================================
-function showToast(type, message, duration = 3000) {
+function showToast(message) {
   const container = $('#toast-container');
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span class="toast-icon"></span><span>${esc(message)}</span>`;
+  toast.className = 'bg-slate-800 border border-slate-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2 transform transition-all translate-y-full opacity-0';
+  toast.textContent = message;
   container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add('toast-out');
-    toast.addEventListener('animationend', () => toast.remove(), { once: true });
-  }, duration);
-}
-
-// ============================================================
-//  Panel helpers
-// ============================================================
-function openPanel(panelId) {
-  $('#panel-overlay').classList.add('active');
-  $(`#${panelId}`).classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeAllPanels() {
-  $('#panel-overlay').classList.remove('active');
-  $$('.side-panel').forEach(p => p.classList.remove('active'));
-  document.body.style.overflow = '';
-}
-
-function openModal(overlayId) {
-  $(`#${overlayId}`).classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal(overlayId) {
-  $(`#${overlayId}`).classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-// ============================================================
-//  Autocomplete
-// ============================================================
-function buildAutocomplete() {
-  const input    = $('#category-input');
-  const dropdown = $('#autocomplete-dropdown');
-  let activeIdx  = -1;
-  let matches    = [];
-
-  input.addEventListener('input', () => {
-    const val = input.value.toLowerCase().trim();
-    dropdown.innerHTML = '';
-    activeIdx = -1;
-
-    if (!val) { dropdown.classList.add('hidden'); return; }
-
-    matches = CATEGORY_LIST.filter(c => c.startsWith(val)).slice(0, 8);
-    if (!matches.length) { dropdown.classList.add('hidden'); return; }
-
-    dropdown.innerHTML = matches.map((m, i) => `
-      <div class="autocomplete-item" data-idx="${i}" role="option" aria-selected="false">
-        <span class="ac-icon">🔍</span> ${esc(m)}
-      </div>
-    `).join('');
-
-    dropdown.classList.remove('hidden');
-
-    $$('.autocomplete-item', dropdown).forEach(item => {
-      item.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        input.value = matches[parseInt(item.dataset.idx)];
-        dropdown.classList.add('hidden');
-        $('#city-input').focus();
-      });
-    });
-  });
-
-  input.addEventListener('keydown', (e) => {
-    const items = $$('.autocomplete-item', dropdown);
-    if (!items.length) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      activeIdx = Math.min(activeIdx + 1, items.length - 1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      activeIdx = Math.max(activeIdx - 1, -1);
-    } else if (e.key === 'Enter' && activeIdx >= 0) {
-      e.preventDefault();
-      input.value = matches[activeIdx];
-      dropdown.classList.add('hidden');
-      $('#city-input').focus();
-      return;
-    } else if (e.key === 'Escape') {
-      dropdown.classList.add('hidden');
-      return;
-    }
-
-    items.forEach((item, i) => item.classList.toggle('active', i === activeIdx));
-  });
-
-  input.addEventListener('blur', () => {
-    setTimeout(() => dropdown.classList.add('hidden'), 150);
+  requestAnimationFrame(() => {
+    toast.classList.remove('translate-y-full', 'opacity-0');
+    setTimeout(() => {
+      toast.classList.add('translate-y-full', 'opacity-0');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   });
 }
 
-// ============================================================
-//  Pro Tips banner
-// ============================================================
-function initTipsBanner() {
-  const dismissed = localStorage.getItem('findleads_tips_dismissed') === 'true';
-  const banner    = $('#tips-banner');
-  if (!banner) return;
+function openPanel(title, renderFn) {
+  $('#panel-title').textContent = title;
+  renderFn();
+  $('#side-panel-overlay').classList.remove('hidden');
+  $('#side-panel-overlay').classList.remove('opacity-0');
+  $('#side-panel').classList.remove('translate-x-full');
+}
 
-  if (dismissed) {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  // Pick random tip
-  const tip = PRO_TIPS[Math.floor(Math.random() * PRO_TIPS.length)];
-  $('#tips-text').textContent = tip;
-
-  $('#tips-dismiss').addEventListener('click', () => {
-    banner.classList.add('hidden');
-    localStorage.setItem('findleads_tips_dismissed', 'true');
-  });
+function closePanelsAndModals() {
+  $('#side-panel').classList.add('translate-x-full');
+  $('#side-panel-overlay').classList.add('opacity-0');
+  setTimeout(() => $('#side-panel-overlay').classList.add('hidden'), 300);
+  
+  $('#modal-overlay').classList.add('opacity-0');
+  $('#modal-content').classList.add('scale-95');
+  setTimeout(() => $('#modal-overlay').classList.add('hidden'), 300);
 }
 
 // ============================================================
-//  Event wiring
-// ============================================================
-function initEventListeners() {
-
-  // Search form submit
-  $('#search-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const category = $('#category-input').value.trim();
-    const city     = $('#city-input').value.trim();
-    if (!category || !city) {
-      showToast('error', 'Please fill in both fields.');
-      return;
-    }
-    runSearch(category, city);
-  });
-
-  // Popular pills
-  $$('.pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      const cat = pill.dataset.category;
-      $('#category-input').value = cat;
-      $('#city-input').focus();
-    });
-  });
-
-  // Starter cards
-  $$('.starter-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const cat  = card.dataset.category;
-      const city = card.dataset.city;
-      $('#category-input').value = cat;
-      $('#city-input').value     = city;
-      runSearch(cat, city);
-      window.scrollTo({ top: $('#results-section').offsetTop - 80, behavior: 'smooth' });
-    });
-  });
-
-  // Filter toggle
-  $('#filter-leads-only').addEventListener('change', refilter);
-
-  // Sort select
-  $('#sort-select').addEventListener('change', refilter);
-
-  // Load more
-  $('#load-more-btn').addEventListener('click', () => {
-    const filters  = getCurrentFilters();
-    const filtered = applyFilters(allResults, filters);
-    renderResults(filtered, true);
-  });
-
-  // Results grid — delegated events
-  $('#results-grid').addEventListener('click', (e) => {
-    // Copy phone
-    const copyBtn = e.target.closest('.btn-copy');
-    if (copyBtn) {
-      const phone = copyBtn.dataset.phone;
-      navigator.clipboard?.writeText(phone).then(() => {
-        copyBtn.textContent = 'Copied!';
-        copyBtn.classList.add('copied');
-        setTimeout(() => {
-          copyBtn.textContent = 'Copy';
-          copyBtn.classList.remove('copied');
-        }, 2000);
-      }).catch(() => showToast('error', 'Could not copy — check clipboard permissions'));
-      return;
-    }
-
-    // Save lead
-    const saveBtn = e.target.closest('.btn-save');
-    if (saveBtn) {
-      const leadId = parseInt(saveBtn.dataset.leadId);
-      const lead   = allResults.find(l => l.id === leadId);
-      if (lead) openSaveModal(lead);
-      return;
-    }
-  });
-
-  // Panel overlay close
-  $('#panel-overlay').addEventListener('click', closeAllPanels);
-
-  // History panel
-  $('#open-history-btn').addEventListener('click', () => {
-    renderHistoryPanel();
-    openPanel('history-panel');
-  });
-  $('#history-panel-close').addEventListener('click', closeAllPanels);
-
-  // Saved lists panel
-  $('#open-saved-btn').addEventListener('click', () => {
-    renderSavedListsPanel();
-    openPanel('saved-panel');
-  });
-  $('#saved-panel-close').addEventListener('click', closeAllPanels);
-
-  // How It Works modal
-  $('#open-hiw-btn').addEventListener('click', () => openModal('hiw-modal-overlay'));
-  $('#hiw-modal-close').addEventListener('click', () => closeModal('hiw-modal-overlay'));
-  $('#hiw-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === $('#hiw-modal-overlay')) closeModal('hiw-modal-overlay');
-  });
-
-  // Save Lead modal
-  $('#save-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === $('#save-modal-overlay')) closeSaveModal();
-  });
-  $('#save-modal-close').addEventListener('click', closeSaveModal);
-
-  // Create new list in modal
-  $('#create-list-btn').addEventListener('click', () => {
-    const name = $('#new-list-input').value.trim();
-    if (!name) { showToast('error', 'Enter a list name.'); return; }
-    if (!pendingLead) return;
-    const added = saveLeadToList(pendingLead, name);
-    closeSaveModal();
-    if (added) {
-      showToast('success', `✅ Saved to new list "${name}"`);
-      markCardSaved(pendingLead?.id);
-    } else {
-      showToast('info', 'Already in that list');
-    }
-    $('#new-list-input').value = '';
-  });
-
-  $('#new-list-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') $('#create-list-btn').click();
-  });
-
-  // Keyboard accessibility: close modals on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeAllPanels();
-      closeModal('hiw-modal-overlay');
-      closeSaveModal();
-    }
-  });
-}
-
-// ============================================================
-//  Boot
+//  Init & Listeners
 // ============================================================
 function init() {
-  buildAutocomplete();
-  initTipsBanner();
-  initEventListeners();
+  // Populate categories
+  const catInput = $('#category-input');
+  Object.keys(CATEGORY_MAP).forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    catInput.appendChild(opt);
+  });
 
-  // Initial panel render
-  renderHistoryPanel();
-  renderSavedListsPanel();
+  // Location autocomplete logic
+  const locInput = $('#location-input');
+  const suggBox = $('#location-suggestions');
+  const suggList = $('#location-suggestions-list');
+
+  locInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    const val = e.target.value.trim();
+    if (!val) { suggBox.classList.add('hidden'); return; }
+    
+    debounceTimer = setTimeout(async () => {
+      const results = await fetchLocationSuggestions(val);
+      if (!results.length) { suggBox.classList.add('hidden'); return; }
+      suggList.innerHTML = results.map(r => `
+        <li class="px-4 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-300" onclick="document.getElementById('location-input').value='${esc(r.display_name.split(',')[0])}'; document.getElementById('location-suggestions').classList.add('hidden');">
+          ${esc(r.display_name)}
+        </li>
+      `).join('');
+      suggBox.classList.remove('hidden');
+    }, 400);
+  });
+  
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('#location-suggestions') && !e.target.closest('#location-input')) {
+      suggBox.classList.add('hidden');
+    }
+  });
+
+  // Form submit
+  $('#search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    suggBox.classList.add('hidden');
+    runSearch(catInput.value, locInput.value.trim());
+  });
+
+  $('#btn-retry').addEventListener('click', () => runSearch(lastSearchQuery.category, lastSearchQuery.city));
+  $('#toggle-no-website').addEventListener('change', refilter);
+  $('#sort-select').addEventListener('change', refilter);
+  $('#btn-load-more').addEventListener('click', () => renderResults(applyFilters(allResults, { leadsOnly: $('#toggle-no-website').checked, sort: $('#sort-select').value }), true));
+
+  // CSV Export All
+  $('#btn-export-csv').addEventListener('click', () => {
+    const filters = { leadsOnly: $('#toggle-no-website').checked, sort: $('#sort-select').value };
+    const filtered = applyFilters(allResults, filters);
+    if (!filtered.length) return;
+    const headers = ['Business Name','Phone','Address','Google Maps URL','Has Website'];
+    const rows = filtered.map(l => [l.name, l.phone||'', l.address||'', l.mapsUrl||'', l.hasWebsite?'Yes':'No']);
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `FindLeads_${catInput.value.replace(/\s/g,'_')}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+
+  // Panel toggles
+  $('#btn-history').addEventListener('click', () => openPanel('Search History', renderHistoryPanel));
+  $('#btn-saved').addEventListener('click', () => openPanel('Saved Lists', renderSavedListsPanel));
+  $('#btn-close-panel').addEventListener('click', closePanelsAndModals);
+  $('#side-panel-overlay').addEventListener('click', closePanelsAndModals);
+
+  // How it works modal
+  $('#btn-how-it-works').addEventListener('click', () => {
+    $('#modal-title').textContent = 'How FindLeads Works';
+    $('#modal-body').innerHTML = `<ul class="space-y-2 list-disc pl-5">
+      <li>FindLeads queries OpenStreetMap, a free crowdsourced map of the world.</li>
+      <li>It looks for businesses that <strong>do not have a website tag</strong>.</li>
+      <li>Since this data is maintained by humans, always verify the business before pitching!</li>
+      <li>Pro Tip: ${PRO_TIPS[Math.floor(Math.random() * PRO_TIPS.length)]}</li>
+    </ul>`;
+    $('#modal-overlay').classList.remove('hidden');
+    requestAnimationFrame(() => {
+      $('#modal-overlay').classList.remove('opacity-0');
+      $('#modal-content').classList.remove('scale-95');
+    });
+  });
+  $('#btn-close-modal').addEventListener('click', closePanelsAndModals);
+
+  // Results Grid Actions (Copy / Save)
+  $('#results-grid').addEventListener('click', (e) => {
+    if (e.target.closest('.btn-copy')) {
+      const btn = e.target.closest('.btn-copy');
+      navigator.clipboard.writeText(btn.dataset.phone).then(() => {
+        const orig = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = orig, 1500);
+      });
+    }
+    if (e.target.closest('.btn-save')) {
+      const btn = e.target.closest('.btn-save');
+      const lead = allResults.find(l => l.id == btn.dataset.leadId);
+      if (lead) {
+        $('#modal-title').textContent = 'Save Lead';
+        const lists = Object.keys(getSavedLists());
+        $('#modal-body').innerHTML = `
+          <div class="mb-4">
+            <p class="font-medium text-white">${lead.name}</p>
+            <p class="text-xs text-slate-400">${lead.address || ''}</p>
+          </div>
+          <div class="space-y-2">
+            <input type="text" id="new-list-name" placeholder="New list name (e.g. Dallas Plumbers)" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <button id="btn-create-list" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded p-2 text-sm font-medium transition-colors">Create & Save</button>
+          </div>
+          ${lists.length ? `<div class="mt-4 pt-4 border-t border-slate-700"><p class="text-xs text-slate-400 mb-2 uppercase font-medium">Or add to existing list:</p><div class="flex flex-col gap-2">${lists.map(list => `<button class="text-left bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2 rounded text-sm text-slate-200 transition-colors" onclick="
+            const ls = JSON.parse(localStorage.getItem('${LISTS_KEY}'));
+            if (!ls['${list}'].find(l => l.id === ${lead.id})) { ls['${list}'].push(${JSON.stringify(lead).replace(/'/g, "\\'")}); localStorage.setItem('${LISTS_KEY}', JSON.stringify(ls)); }
+            document.getElementById('btn-close-modal').click();
+            const sb = document.getElementById('save-${lead.id}'); if(sb){sb.textContent='✅ Saved'; sb.classList.add('bg-amber-600', 'text-white', 'border-amber-500');}
+          ">📋 ${esc(list)}</button>`).join('')}</div></div>` : ''}
+        `;
+        $('#modal-overlay').classList.remove('hidden');
+        requestAnimationFrame(() => {
+          $('#modal-overlay').classList.remove('opacity-0');
+          $('#modal-content').classList.remove('scale-95');
+        });
+        
+        // Wait for DOM
+        setTimeout(() => {
+          const createBtn = $('#btn-create-list');
+          if (createBtn) createBtn.addEventListener('click', () => {
+            const listName = $('#new-list-name').value.trim();
+            if(!listName) return;
+            const ls = getSavedLists();
+            if(!ls[listName]) ls[listName] = [];
+            if(!ls[listName].find(l => l.id === lead.id)) {
+              ls[listName].push(lead);
+              localStorage.setItem(LISTS_KEY, JSON.stringify(ls));
+            }
+            closePanelsAndModals();
+            btn.textContent = '✅ Saved';
+            btn.classList.add('bg-amber-600', 'text-white', 'border-amber-500');
+          });
+        }, 100);
+      }
+    }
+  });
+
+  // Delegated clicks for history items
+  $('#panel-content').addEventListener('click', (e) => {
+    if (e.target.closest('.history-item')) {
+      const idx = e.target.closest('.history-item').dataset.idx;
+      const h = getHistory()[idx];
+      $('#category-input').value = h.category;
+      $('#location-input').value = h.city;
+      closePanelsAndModals();
+      runSearch(h.category, h.city);
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
