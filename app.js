@@ -108,8 +108,33 @@ function timeAgo(ts) {
 }
 
 function hasWebsite(tags) {
-  const keys = ['website','contact:website','url','contact:url'];
-  return keys.some(k => tags[k] && tags[k].trim().length > 0);
+  // All OSM tags that indicate ANY online/web presence
+  const EXPLICIT_KEYS = [
+    'website', 'url', 'contact:website', 'contact:url',
+    // Social media (a social page IS a web presence)
+    'facebook', 'contact:facebook', 'contact:facebook_page',
+    'instagram', 'contact:instagram',
+    'twitter', 'contact:twitter',
+    'youtube', 'contact:youtube',
+    'linkedin', 'contact:linkedin',
+    'tiktok', 'contact:tiktok',
+    'yelp',
+    // Online ordering / booking
+    'seamless', 'doordash', 'ubereats', 'grubhub',
+    'booking', 'contact:booking', 'reservation',
+    // E-commerce
+    'online_shop', 'shop_url',
+  ];
+
+  if (EXPLICIT_KEYS.some(k => tags[k] && tags[k].trim().length > 0)) return true;
+
+  // Also scan every key dynamically — catch any key containing 'website', 'url',
+  // or 'facebook', 'instagram', etc. that OSM contributors may have spelled differently
+  const WEB_SIGNALS = ['website', 'url', 'facebook', 'instagram', 'twitter', 'linkedin', 'yelp', 'youtube'];
+  return Object.keys(tags).some(k =>
+    WEB_SIGNALS.some(sig => k.toLowerCase().includes(sig)) &&
+    tags[k] && tags[k].trim().length > 0
+  );
 }
 
 function buildMapsUrl(name, address) {
