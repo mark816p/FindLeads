@@ -1,0 +1,14 @@
+# .DS_Store
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+
+# Local env files (none needed, but just in case)
+.env
+.env.local

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>FindLeads — Find Local Businesses Without a Website</title>
+  <meta name="description" content="FindLeads helps freelancers, web designers, and agencies discover local businesses that have no website — completely free, no API keys, powered by OpenStreetMap." />
+  <meta name="keywords" content="lead generation, find leads, web design leads, local businesses no website, OpenStreetMap leads, freelance leads" />
+  <meta name="author" content="FindLeads" />
+  <link rel="canonical" href="https://findleads.github.io/FindLeads/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="FindLeads — Find Local Businesses Without a Website" />
+  <meta property="og:description" content="Discover warm leads instantly. Search any city for businesses with no website — 100% free, no sign-up, powered by OpenStreetMap." />
+  <meta property="og:url"         content="https://findleads.github.io/FindLeads/" />
+  <meta property="og:image"       content="https://findleads.github.io/FindLeads/screenshots/hero.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="FindLeads — Find Local Businesses Without a Website" />
+  <meta name="twitter:description" content="Discover warm leads instantly. 100% free, no sign-up." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<!-- ============================================================
+     Header
+     ============================================================ -->
+<header class="site-header" role="banner">
+  <div class="container">
+    <div class="header-inner">
+
+      <!-- Logo -->
+      <a href="/" class="logo" aria-label="FindLeads home">
+        <div class="logo-icon" aria-hidden="true">📡</div>
+        <span class="logo-text">Find<span>Leads</span></span>
+      </a>
+
+      <!-- Header action buttons -->
+      <nav class="header-actions" aria-label="Site navigation">
+        <button class="btn-ghost" id="open-hiw-btn" aria-label="How it works" aria-haspopup="dialog">
+          <span class="icon">💡</span>
+          <span>How It Works</span>
+        </button>
+        <button class="btn-ghost" id="open-history-btn" aria-label="Open search history" aria-haspopup="dialog">
+          <span class="icon">🕐</span>
+          <span>History</span>
+        </button>
+        <button class="btn-ghost" id="open-saved-btn" aria-label="Open saved leads" aria-haspopup="dialog">
+          <span class="icon">⭐</span>
+          <span>Saved Lists</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     Main Content
+     ============================================================ -->
+<main id="main-content" role="main">
+
+  <!-- ── Hero / Search Section ── -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container">
+
+      <!-- Headline -->
+      <h1 class="hero-title" id="hero-title">
+        Find Businesses with
+        <span class="gradient-text">No Website</span>
+      </h1>
+      <p class="hero-subtitle">
+        Discover warm leads in any city — powered by OpenStreetMap.
+        100% free, no API keys, no sign-up required.
+      </p>
+
+      <!-- Search Card -->
+      <div class="search-card" role="search" aria-label="Lead search form">
+        <form id="search-form" novalidate>
+          <div class="search-row">
+
+            <!-- Category input -->
+            <div class="search-field">
+              <label for="category-input">Business Type</label>
+              <div class="search-input-wrap">
+                <span class="search-input-icon" aria-hidden="true">🔍</span>
+                <input
+                  type="text"
+                  id="category-input"
+                  class="search-input"
+                  placeholder="e.g. barbershops, dentists…"
+                  autocomplete="off"
+                  aria-autocomplete="list"
+                  aria-controls="autocomplete-dropdown"
+                  aria-expanded="false"
+                />
+                <div
+                  id="autocomplete-dropdown"
+                  class="autocomplete-dropdown hidden"
+                  role="listbox"
+                  aria-label="Category suggestions"
+                ></div>
+              </div>
+            </div>
+
+            <!-- City input -->
+            <div class="search-field">
+              <label for="city-input">Location</label>
+              <div class="search-input-wrap">
+                <span class="search-input-icon" aria-hidden="true">📍</span>
+                <input
+                  type="text"
+                  id="city-input"
+                  class="search-input"
+                  placeholder="e.g. Austin, TX or London, UK"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <!-- Search button -->
+            <div class="search-btn-wrap">
+              <button
+                type="submit"
+                class="btn-search"
+                id="search-btn"
+                aria-label="Search for leads"
+              >
+                <span aria-hidden="true">🚀</span> Search Leads
+              </button>
+            </div>
+
+          </div><!-- /.search-row -->
+
+          <!-- Popular category pills -->
+          <div class="popular-section">
+            <div class="popular-label" id="popular-label">Popular Categories</div>
+            <div class="popular-pills" role="group" aria-labelledby="popular-label">
+              <button type="button" class="pill" data-category="Barbershops"  aria-label="Search barbershops">✂️ Barbershops</button>
+              <button type="button" class="pill" data-category="Gyms"         aria-label="Search gyms">💪 Gyms</button>
+              <button type="button" class="pill" data-category="Dentists"     aria-label="Search dentists">🦷 Dentists</button>
+              <button type="button" class="pill" data-category="Restaurants"  aria-label="Search restaurants">🍕 Restaurants</button>
+              <button type="button" class="pill" data-category="Auto Repair"  aria-label="Search auto repair">🔧 Auto Repair</button>
+              <button type="button" class="pill" data-category="Yoga Studios" aria-label="Search yoga studios">🧘 Yoga Studios</button>
+              <button type="button" class="pill" data-category="Pet Groomers" aria-label="Search pet groomers">🐾 Pet Groomers</button>
+              <button type="button" class="pill" data-category="Coffee Shops" aria-label="Search coffee shops">☕ Coffee</button>
+              <button type="button" class="pill" data-category="Nail Salons"  aria-label="Search nail salons">💅 Nail Salons</button>
+              <button type="button" class="pill" data-category="Plumbers"     aria-label="Search plumbers">🔩 Plumbers</button>
+            </div>
+          </div>
+
+        </form><!-- /#search-form -->
+      </div><!-- /.search-card -->
+
+      <!-- Pro Tips Banner -->
+      <div class="tips-banner" id="tips-banner" role="note" aria-label="Pro tip">
+        <span class="tips-icon" aria-hidden="true">💡</span>
+        <div class="tips-content">
+          <div class="tips-label">Pro Tip</div>
+          <p class="tips-text" id="tips-text">Loading tip…</p>
+        </div>
+        <button class="tips-dismiss" id="tips-dismiss" aria-label="Dismiss tip">✕</button>
+      </div>
+
+      <!-- Starter Searches -->
+      <div class="starters-section">
+        <div class="section-label" id="starters-label">Quick Starts — Click to Search</div>
+        <div class="starters-grid" role="list" aria-labelledby="starters-label">
+
+          <div class="starter-card" role="listitem" data-category="Barbershops" data-city="Austin, TX"
+               tabindex="0" aria-label="Search barbershops in Austin TX">
+            <span class="starter-emoji">✂️</span>
+            <div class="starter-category">Barbershops</div>
+            <div class="starter-city">Austin, TX</div>
+          </div>
+
+          <div class="starter-card" role="listitem" data-category="Dentists" data-city="Brooklyn, NY"
+               tabindex="0" aria-label="Search dentists in Brooklyn NY">
+            <span class="starter-emoji">🦷</span>
+            <div class="starter-category">Dentists</div>
+            <div class="starter-city">Brooklyn, NY</div>
+          </div>
+
+          <div class="starter-card" role="listitem" data-category="Nail Salons" data-city="Los Angeles, CA"
+               tabindex="0" aria-label="Search nail salons in Los Angeles CA">
+            <span class="starter-emoji">💅</span>
+            <div class="starter-category">Nail Salons</div>
+            <div class="starter-city">Los Angeles, CA</div>
+          </div>
+
+          <div class="starter-card" role="listitem" data-category="Auto Repair" data-city="Chicago, IL"
+               tabindex="0" aria-label="Search auto repair in Chicago IL">
+            <span class="starter-emoji">🔧</span>
+            <div class="starter-category">Auto Repair</div>
+            <div class="starter-city">Chicago, IL</div>
+          </div>
+
+          <div class="starter-card" role="listitem" data-category="Pet Groomers" data-city="Miami, FL"
+               tabindex="0" aria-label="Search pet groomers in Miami FL">
+            <span class="starter-emoji">🐾</span>
+            <div class="starter-category">Pet Groomers</div>
+            <div class="starter-city">Miami, FL</div>
+          </div>
+
+          <div class="starter-card" role="listitem" data-category="Coffee Shops" data-city="Seattle, WA"
+               tabindex="0" aria-label="Search coffee shops in Seattle WA">
+            <span class="starter-emoji">☕</span>
+            <div class="starter-category">Coffee Shops</div>
+            <div class="starter-city">Seattle, WA</div>
+          </div>
+
+        </div><!-- /.starters-grid -->
+      </div><!-- /.starters-section -->
+
+    </div><!-- /.container -->
+  </section><!-- /.hero -->
+
+  <!-- ── Results Section ── -->
+  <section class="results-section hidden" id="results-section" aria-label="Search results" aria-live="polite">
+    <div class="container">
+
+      <!-- Multi-stage loading indicator -->
+      <div id="loading-status" class="loading-status hidden" role="status" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true">
+          <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-stage" id="loading-stage">Searching…</div>
+        <div class="loading-sub"   id="loading-sub"></div>
+      </div>
+
+      <!-- Filter / Sort toolbar -->
+      <div class="results-toolbar hidden" id="results-toolbar">
+        <div class="results-count" id="results-count" aria-live="polite"></div>
+        <div class="toolbar-controls">
+
+          <!-- No-website toggle -->
+          <label class="toggle-wrap" for="filter-leads-only" aria-label="Show only businesses without a website">
+            <div class="toggle-switch">
+              <input type="checkbox" id="filter-leads-only" checked />
+              <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+              </div>
+            </div>
+            <span class="toggle-label">No Website Only</span>
+          </label>
+
+          <!-- Sort select -->
+          <label class="sr-only" for="sort-select">Sort results</label>
+          <select id="sort-select" class="sort-select" aria-label="Sort results">
+            <option value="leads-first">Leads First</option>
+            <option value="name-az">Name A–Z</option>
+          </select>
+
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div class="results-grid" id="results-grid" role="list" aria-label="Business results"></div>
+
+      <!-- Load More -->
+      <div class="load-more-wrap hidden" id="load-more-wrap">
+        <button class="btn-load-more" id="load-more-btn" aria-label="Load more results">
+          ↓ Load More
+        </button>
+      </div>
+
+    </div><!-- /.container -->
+  </section><!-- /#results-section -->
+
+</main>
+
+<!-- ============================================================
+     Footer
+     ============================================================ -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-inner">
+      <p class="footer-attribution">
+        Business data ©
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
+          OpenStreetMap contributors
+        </a>,
+        available under the
+        <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">
+          Open Database License
+        </a>.
+        Geocoding by
+        <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>.
+      </p>
+      <p class="footer-tagline">FindLeads · Open Source · Zero Cost · No Sign-up</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     Panel Overlay (shared backdrop for slide-out panels)
+     ============================================================ -->
+<div class="panel-overlay" id="panel-overlay" aria-hidden="true"></div>
+
+<!-- ── History Panel ── -->
+<aside class="side-panel" id="history-panel" role="dialog" aria-modal="true" aria-labelledby="history-panel-title" aria-hidden="true">
+  <div class="panel-header">
+    <h2 class="panel-title" id="history-panel-title">🕐 Search History</h2>
+    <button class="panel-close" id="history-panel-close" aria-label="Close history panel">✕</button>
+  </div>
+  <div class="panel-body" id="history-panel-body">
+    <!-- Populated by JS -->
+  </div>
+</aside>
+
+<!-- ── Saved Lists Panel ── -->
+<aside class="side-panel" id="saved-panel" role="dialog" aria-modal="true" aria-labelledby="saved-panel-title" aria-hidden="true">
+  <div class="panel-header">
+    <h2 class="panel-title" id="saved-panel-title">⭐ Saved Lists</h2>
+    <button class="panel-close" id="saved-panel-close" aria-label="Close saved lists panel">✕</button>
+  </div>
+  <div class="panel-body" id="saved-panel-body">
+    <!-- Populated by JS -->
+  </div>
+</aside>
+
+<!-- ============================================================
+     How It Works Modal
+     ============================================================ -->
+<div class="modal-overlay" id="hiw-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="hiw-modal-title" aria-hidden="true">
+  <div class="modal" id="hiw-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="hiw-modal-title">💡 How FindLeads Works</h2>
+      <button class="modal-close" id="hiw-modal-close" aria-label="Close modal">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="hiw-step">
+        <div class="hiw-num" aria-hidden="true">1</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Type a business type &amp; city</div>
+          <div class="hiw-desc">Enter something like "barbershops" and "Austin, TX". FindLeads understands 100+ business categories.</div>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num" aria-hidden="true">2</div>
+        <div class="hiw-content">
+          <div class="hiw-title">We search OpenStreetMap</div>
+          <div class="hiw-desc">Your query is sent to the Overpass API — a free, open read-only interface to OpenStreetMap's global database of businesses, landmarks, and places.</div>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num" aria-hidden="true">3</div>
+        <div class="hiw-content">
+          <div class="hiw-title">We check each business for a website</div>
+          <div class="hiw-desc">OpenStreetMap stores whether a business has a website as a tag. We check the <code>website</code> and <code>contact:website</code> fields on every result.</div>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num" aria-hidden="true">4</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Leads are flagged automatically</div>
+          <div class="hiw-desc">Any business without a website tag gets a bright <strong style="color:hsl(38,95%,55%)">No Website — Lead!</strong> badge. These are your warm prospects.</div>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num" aria-hidden="true">5</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Reach out &amp; pitch your services</div>
+          <div class="hiw-desc">Click "Open in Maps" to verify the listing, find the phone number, and get directions. Save your best leads to a named list and export as CSV to your CRM.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.07)">
+        <p style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6">
+          FindLeads is 100% open source and runs entirely in your browser. No accounts, no API keys, no servers, no costs — ever.
+          Business data is provided by the OpenStreetMap community under the
+          <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL license</a>.
+        </p>
+      </div>
+
+    </div><!-- /.modal-body -->
+  </div><!-- /.modal -->
+</div><!-- /#hiw-modal-overlay -->
+
+<!-- ============================================================
+     Save Lead Modal
+     ============================================================ -->
+<div class="modal-overlay" id="save-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="save-modal-title" aria-hidden="true">
+  <div class="modal" id="save-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="save-modal-title">⭐ Save Lead</h2>
+      <button class="modal-close" id="save-modal-close" aria-label="Close save modal">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Business preview -->
+      <div class="save-lead-biz">
+        <div class="save-lead-biz-name" id="save-modal-biz-name">Business Name</div>
+        <div class="save-lead-biz-address" id="save-modal-biz-address">Address</div>
+      </div>
+
+      <!-- Existing lists -->
+      <div id="existing-lists-container"></div>
+
+      <!-- Create new list -->
+      <div class="new-list-section">
+        <div class="new-list-label">Create a new list</div>
+        <div class="new-list-input-wrap">
+          <input
+            type="text"
+            id="new-list-input"
+            class="new-list-input"
+            placeholder="e.g. Austin Barbershops Aug 2026"
+            aria-label="New list name"
+            maxlength="80"
+          />
+          <button class="btn-create-list" id="create-list-btn" aria-label="Create list and save lead">
+            Save
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /.modal-body -->
+  </div><!-- /.modal -->
+</div><!-- /#save-modal-overlay -->
+
+<!-- ============================================================
+     Toast Container
+     ============================================================ -->
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ============================================================
+     App Script
+     ============================================================ -->
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
