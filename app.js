@@ -7,50 +7,157 @@
 //  Category Mapping Table (Grouped for Select Dropdown)
 // ============================================================
 const CATEGORY_MAP = {
+  // ---- Broad ----
   'All Businesses (Broad Search)': [
-    { k:'shop', v:'*' }, { k:'amenity', v:'*' }, { k:'leisure', v:'*' }
+    { k:'shop', v:'*' }, { k:'amenity', v:'*' }, { k:'leisure', v:'*' }, { k:'office', v:'*' }
   ],
+
+  // ---- Hair & Beauty ----
   'Barbers & Hair Salons': [
-    { k:'shop', v:'hairdresser' }, { k:'amenity', v:'barber' }
+    { k:'shop', v:'hairdresser' },
+    { k:'amenity', v:'barber' },
+    { k:'craft', v:'hairdresser' },
   ],
   'Nail & Beauty Salons': [
-    { k:'shop', v:'beauty' }, { k:'shop', v:'nail_salon' }, { k:'shop', v:'tanning' }, { k:'leisure', v:'spa' }
+    { k:'shop', v:'nail_salon' },
+    { k:'shop', v:'beauty' },
+    { k:'shop', v:'cosmetics' },
+    { k:'shop', v:'tanning' },
+    { k:'leisure', v:'spa' },
+    { k:'shop', v:'massage' },
   ],
+  'Tattoo & Piercing Studios': [
+    { k:'shop', v:'tattoo' },
+    { k:'shop', v:'piercing' },
+  ],
+
+  // ---- Fitness ----
   'Gyms & Fitness Centers': [
-    { k:'leisure', v:'fitness_centre' }, { k:'amenity', v:'gym' }, { k:'sport', v:'yoga' }, { k:'sport', v:'crossfit' }, { k:'sport', v:'pilates' }
+    { k:'leisure', v:'fitness_centre' },
+    { k:'amenity', v:'gym' },
+    { k:'leisure', v:'sports_centre' },
+    { k:'sport', v:'yoga' },
+    { k:'sport', v:'crossfit' },
+    { k:'sport', v:'pilates' },
+    { k:'sport', v:'martial_arts' },
+    { k:'sport', v:'boxing' },
   ],
+
+  // ---- Food & Drink ----
   'Restaurants & Cafes': [
-    { k:'amenity', v:'restaurant' }, { k:'amenity', v:'cafe' }, { k:'amenity', v:'fast_food' }, { k:'shop', v:'bakery' }
+    { k:'amenity', v:'restaurant' },
+    { k:'amenity', v:'cafe' },
+    { k:'amenity', v:'fast_food' },
+    { k:'amenity', v:'food_court' },
+    { k:'amenity', v:'ice_cream' },
+    { k:'shop', v:'bakery' },
+    { k:'shop', v:'deli' },
+    { k:'shop', v:'confectionery' },
   ],
   'Bars & Pubs': [
-    { k:'amenity', v:'bar' }, { k:'amenity', v:'pub' }
+    { k:'amenity', v:'bar' },
+    { k:'amenity', v:'pub' },
+    { k:'amenity', v:'biergarten' },
+    { k:'amenity', v:'nightclub' },
   ],
+
+  // ---- Health ----
   'Dentists & Orthodontists': [
-    { k:'amenity', v:'dentist' }
+    { k:'amenity', v:'dentist' },
+    { k:'healthcare', v:'dentist' },
+    { k:'healthcare', v:'orthodontist' },
   ],
   'Doctors & Clinics': [
-    { k:'amenity', v:'doctors' }, { k:'amenity', v:'clinic' }
+    { k:'amenity', v:'doctors' },
+    { k:'amenity', v:'clinic' },
+    { k:'healthcare', v:'doctor' },
+    { k:'healthcare', v:'clinic' },
+    { k:'healthcare', v:'general_practitioner' },
+    { k:'healthcare', v:'physiotherapist' },
+    { k:'healthcare', v:'chiropractor' },
+    { k:'amenity', v:'optician' },
+    { k:'shop', v:'optician' },
   ],
+  'Pharmacies': [
+    { k:'amenity', v:'pharmacy' },
+    { k:'healthcare', v:'pharmacy' },
+  ],
+  'Veterinarians': [
+    { k:'amenity', v:'veterinary' },
+    { k:'healthcare', v:'veterinary' },
+  ],
+
+  // ---- Automotive ----
   'Auto Repair & Mechanics': [
-    { k:'shop', v:'car_repair' }
+    { k:'shop', v:'car_repair' },
+    { k:'shop', v:'tyres' },
+    { k:'shop', v:'car_parts' },
+    { k:'amenity', v:'car_repair' },
+    { k:'craft', v:'car_repair' },
   ],
   'Car Washes & Detailers': [
-    { k:'amenity', v:'car_wash' }
+    { k:'amenity', v:'car_wash' },
+    { k:'shop', v:'car_wash' },
   ],
-  'Pet Groomers & Stores': [
-    { k:'shop', v:'pet_grooming' }, { k:'shop', v:'pet' }
+  'Car Dealers': [
+    { k:'shop', v:'car' },
+    { k:'amenity', v:'car_rental' },
   ],
+
+  // ---- Pets ----
+  'Pet Groomers & Pet Stores': [
+    { k:'shop', v:'pet_grooming' },
+    { k:'shop', v:'pet' },
+    { k:'craft', v:'pet_grooming' },
+  ],
+
+  // ---- Home Services ----
   'Plumbers & Electricians': [
-    { k:'shop', v:'plumber' }, { k:'shop', v:'electrician' }
+    { k:'shop', v:'plumber' },
+    { k:'shop', v:'electrician' },
+    { k:'craft', v:'plumber' },
+    { k:'craft', v:'electrician' },
+    { k:'craft', v:'hvac' },
+    { k:'shop', v:'heating' },
   ],
+  'Cleaning & Laundry': [
+    { k:'shop', v:'laundry' },
+    { k:'shop', v:'dry_cleaning' },
+    { k:'shop', v:'cleaning' },
+    { k:'amenity', v:'laundry' },
+  ],
+
+  // ---- Retail ----
+  'Retail Shops': [
+    { k:'shop', v:'clothes' },
+    { k:'shop', v:'shoes' },
+    { k:'shop', v:'jewelry' },
+    { k:'shop', v:'gift' },
+    { k:'shop', v:'florist' },
+    { k:'shop', v:'books' },
+    { k:'shop', v:'toys' },
+    { k:'shop', v:'electronics' },
+    { k:'shop', v:'mobile_phone' },
+    { k:'shop', v:'hardware' },
+    { k:'shop', v:'furniture' },
+  ],
+
+  // ---- Professional Services ----
   'Real Estate Agencies': [
-    { k:'office', v:'estate_agent' }
+    { k:'office', v:'estate_agent' },
+    { k:'amenity', v:'real_estate_agent' },
   ],
   'Accountants & Lawyers': [
-    { k:'office', v:'accountant' }, { k:'office', v:'lawyer' }
+    { k:'office', v:'accountant' },
+    { k:'office', v:'lawyer' },
+    { k:'office', v:'tax_advisor' },
+    { k:'office', v:'financial' },
   ],
   'Hotels & Motels': [
-    { k:'tourism', v:'hotel' }, { k:'tourism', v:'motel' }
+    { k:'tourism', v:'hotel' },
+    { k:'tourism', v:'motel' },
+    { k:'tourism', v:'guest_house' },
+    { k:'tourism', v:'hostel' },
   ],
 };
 
@@ -160,27 +267,51 @@ async function geocodeLocation(cityName) {
   if (!resp.ok) throw new Error(`Nominatim error: ${resp.status}`);
   const data = await resp.json();
   if (!data.length) throw new Error(`Location not found: "${cityName}"`);
-  const b = data[0].boundingbox;
-  return { south: b[0], north: b[1], west: b[2], east: b[3], displayName: data[0].display_name };
+  const r = data[0];
+  const b = r.boundingbox;
+
+  // Compute Overpass area ID from the OSM relation/way ID.
+  // Relations → add 3,600,000,000. Ways → add 2,400,000,000.
+  // This lets us query WITHIN the real administrative boundary instead of a rectangle.
+  let areaId = null;
+  if (r.osm_type === 'relation') areaId = 3600000000 + parseInt(r.osm_id, 10);
+  else if (r.osm_type === 'way')      areaId = 2400000000 + parseInt(r.osm_id, 10);
+
+  return {
+    south: b[0], north: b[1], west: b[2], east: b[3],
+    displayName: r.display_name,
+    areaId,   // null for node results (rare); bbox used as fallback
+  };
 }
 
 // ============================================================
 //  Overpass query builder & Fetch
 // ============================================================
-function buildOverpassQuery(osmTags, bbox) {
-  const { south, west, north, east } = bbox;
-  const bboxStr = `${south},${west},${north},${east}`;
-  
-  // Handling wildcard "*" values for "All Businesses"
-  const getQuery = (type, k, v) => v === '*' 
-    ? `  ${type}["${k}"](${bboxStr});` 
-    : `  ${type}["${k}"="${v}"](${bboxStr});`;
+function buildOverpassQuery(osmTags, location) {
+  const { south, west, north, east, areaId } = location;
 
-  const nodeLines = osmTags.map(t => getQuery('node', t.k, t.v)).join('\n');
-  const wayLines  = osmTags.map(t => getQuery('way', t.k, t.v)).join('\n');
-  const relLines  = osmTags.map(t => getQuery('relation', t.k, t.v)).join('\n');
+  // Prefer area-based query (exact admin boundary) to prevent
+  // results bleeding into neighbouring cities.
+  // Fall back to bbox for node-type geocoding results (rare).
+  const useArea = !!areaId;
 
-  return `[out:json][timeout:45];\n(\n${nodeLines}\n${wayLines}\n${relLines}\n);\nout body;\n>;\nout skel qt;`;
+  const getLine = (type, k, v) => {
+    if (useArea) {
+      return v === '*'
+        ? `  ${type}["${k}"](area.searchArea);`
+        : `  ${type}["${k}"="${v}"](area.searchArea);`;
+    }
+    const bboxStr = `${south},${west},${north},${east}`;
+    return v === '*'
+      ? `  ${type}["${k}"](${bboxStr});`
+      : `  ${type}["${k}"="${v}"](${bboxStr});`;
+  };
+
+  const types = ['node', 'way', 'relation'];
+  const lines = osmTags.flatMap(t => types.map(type => getLine(type, t.k, t.v))).join('\n');
+
+  const areaClause = useArea ? `area(${areaId})->.searchArea;\n` : '';
+  return `[out:json][timeout:60];\n${areaClause}(\n${lines}\n);\nout body;\n>;\nout skel qt;`;
 }
 
 async function fetchFromOverpass(query) {
