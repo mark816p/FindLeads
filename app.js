@@ -262,45 +262,97 @@ async function fetchLocationSuggestions(query) {
 }
 
 async function geocodeLocation(cityName) {
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityName)}&format=json&limit=1`;
+  // Fetch several candidates so we can pick the best match.
+  // featuretype=settlement prefers city/town/village nodes over district polygons.
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityName)}&format=json&limit=8&addressdetails=1`;
   const resp = await fetch(url, { headers: { 'User-Agent': 'FindLeads/1.0' } });
   if (!resp.ok) throw new Error(`Nominatim error: ${resp.status}`);
   const data = await resp.json();
   if (!data.length) throw new Error(`Location not found: "${cityName}"`);
-  const r = data[0];
-  const b = r.boundingbox;
 
-  // Compute Overpass area ID from the OSM relation/way ID.
-  // Relations → add 3,600,000,000. Ways → add 2,400,000,000.
-  // This lets us query WITHIN the real administrative boundary instead of a rectangle.
+  // Prefer the most city-specific result.
+  // place_rank: city=16, town=17, village=19; district/county=10; state=8
+  // addresstype priority: city > town > village > suburb > county > state_district > ...
+  const CITY_TYPES = ['city', 'town', 'village', 'suburb', 'municipality', 'borough'];
+  const DISTRICT_TYPES = ['county', 'state_district', 'district', 'region', 'state'];
+
+  let best = data[0];
+  for (const r of data) {
+    const at = r.addresstype || '';
+    // Strongly prefer city/town/village over district/county/state
+    if (CITY_TYPES.includes(at) && !CITY_TYPES.includes(best.addresstype || '')) {
+      best = r;
+      break;
+    }
+    // Among same category, prefer higher place_rank (more specific)
+    if (CITY_TYPES.includes(at) && CITY_TYPES.includes(best.addresstype || '') && r.place_rank > best.place_rank) {
+      best = r;
+    }
+  }
+
+  const b = best.boundingbox;
+  const lat = parseFloat(best.lat);
+  const lon = parseFloat(best.lon);
+
+  // Estimate a sensible search radius from the bounding box.
+  // 1 degree latitude ≈ 111 km. Use half the diagonal, clamped to 2–20 km.
+  const latSpanKm  = (parseFloat(b[1]) - parseFloat(b[0])) * 111;
+  const lonSpanKm  = (parseFloat(b[3]) - parseFloat(b[2])) * 111 * Math.cos(lat * Math.PI / 180);
+  const radiusKm   = Math.min(Math.max(Math.sqrt(latSpanKm ** 2 + lonSpanKm ** 2) / 2, 2), 20);
+  const radiusM    = Math.round(radiusKm * 1000);
+
+  // Only use Overpass area() for proper administrative boundary relations
+  // (not state_district / county — those are too large and often span multiple cities).
   let areaId = null;
-  if (r.osm_type === 'relation') areaId = 3600000000 + parseInt(r.osm_id, 10);
-  else if (r.osm_type === 'way')      areaId = 2400000000 + parseInt(r.osm_id, 10);
+  if (
+    best.osm_type === 'relation' &&
+    !DISTRICT_TYPES.includes(best.addresstype || '')
+  ) {
+    areaId = 3600000000 + parseInt(best.osm_id, 10);
+  } else if (
+    best.osm_type === 'way' &&
+    !DISTRICT_TYPES.includes(best.addresstype || '')
+  ) {
+    areaId = 2400000000 + parseInt(best.osm_id, 10);
+  }
 
   return {
     south: b[0], north: b[1], west: b[2], east: b[3],
-    displayName: r.display_name,
-    areaId,   // null for node results (rare); bbox used as fallback
+    lat, lon, radiusM,
+    displayName: best.display_name,
+    addressType: best.addresstype,
+    areaId,
   };
 }
 
 // ============================================================
 //  Overpass query builder & Fetch
 // ============================================================
-function buildOverpassQuery(osmTags, location) {
-  const { south, west, north, east, areaId } = location;
+function buildOverpassQuery(osmTags, location, mode = 'auto') {
+  const { south, west, north, east, areaId, lat, lon, radiusM } = location;
 
-  // Prefer area-based query (exact admin boundary) to prevent
-  // results bleeding into neighbouring cities.
-  // Fall back to bbox for node-type geocoding results (rare).
-  const useArea = !!areaId;
+  // mode can be forced to 'area', 'around', or 'bbox'.
+  // 'auto' picks area if available, otherwise around.
+  let strategy;
+  if (mode === 'area' && areaId)      strategy = 'area';
+  else if (mode === 'around')         strategy = 'around';
+  else if (mode === 'bbox')           strategy = 'bbox';
+  else if (areaId)                    strategy = 'area';
+  else                                strategy = 'around';
 
   const getLine = (type, k, v) => {
-    if (useArea) {
+    if (strategy === 'area') {
       return v === '*'
         ? `  ${type}["${k}"](area.searchArea);`
         : `  ${type}["${k}"="${v}"](area.searchArea);`;
     }
+    if (strategy === 'around') {
+      const aroundStr = `around:${radiusM},${lat},${lon}`;
+      return v === '*'
+        ? `  ${type}["${k}"](${aroundStr});`
+        : `  ${type}["${k}"="${v}"](${aroundStr});`;
+    }
+    // bbox fallback
     const bboxStr = `${south},${west},${north},${east}`;
     return v === '*'
       ? `  ${type}["${k}"](${bboxStr});`
@@ -309,8 +361,7 @@ function buildOverpassQuery(osmTags, location) {
 
   const types = ['node', 'way', 'relation'];
   const lines = osmTags.flatMap(t => types.map(type => getLine(type, t.k, t.v))).join('\n');
-
-  const areaClause = useArea ? `area(${areaId})->.searchArea;\n` : '';
+  const areaClause = strategy === 'area' ? `area(${areaId})->.searchArea;\n` : '';
   return `[out:json][timeout:60];\n${areaClause}(\n${lines}\n);\nout body;\n>;\nout skel qt;`;
 }
 
@@ -486,21 +537,38 @@ async function runSearch(category, city) {
   allResults = [];
   displayedCount = 0;
 
-  setLoading(true, `Finding boundaries for ${city}...`);
+  setLoading(true, `Locating "${city}"...`);
   try {
-    const bbox = await geocodeLocation(city);
+    const location = await geocodeLocation(city);
     const osmTags = CATEGORY_MAP[category];
-    
-    setLoading(true, `Querying OpenStreetMap for ${category}... (this may take a few seconds)`);
-    const query = buildOverpassQuery(osmTags, bbox);
-    const elements = await fetchFromOverpass(query);
 
-    setLoading(true, `Analyzing ${elements.length} records...`);
+    setLoading(true, `Searching ${category} in ${location.displayName.split(',')[0]} (${Math.round(location.radiusM / 1000)} km radius)...`);
+
+    // Strategy 1: Try area() query (precise admin boundary) if we have one
+    let elements = [];
+    if (location.areaId) {
+      try {
+        elements = await fetchFromOverpass(buildOverpassQuery(osmTags, location, 'area'));
+      } catch (e) {
+        if (e.message === 'overpass_busy') throw e;
+        // area() can fail if the relation isn't indexed — fall through to around
+        elements = [];
+      }
+    }
+
+    // Strategy 2: If area returned nothing, retry with around:radius (city centre circle)
+    // This is the KEY fix — catches node-type cities and unindexed relations
+    if (elements.length === 0) {
+      setLoading(true, `Widening search to ${Math.round(location.radiusM / 1000)} km around city centre...`);
+      elements = await fetchFromOverpass(buildOverpassQuery(osmTags, location, 'around'));
+    }
+
+    setLoading(true, `Analysing ${elements.length} records...`);
     allResults = parseElements(elements, category);
     addToHistory({ category, city, total: allResults.length, leads: allResults.filter(l => !l.hasWebsite).length });
 
     setLoading(false);
-    
+
     const filters = { leadsOnly: $('#toggle-no-website').checked, sort: $('#sort-select').value };
     const filtered = applyFilters(allResults, filters);
     renderResults(filtered);
